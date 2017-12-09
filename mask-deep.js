@@ -21,6 +21,11 @@ const isMaskable = (value) => {
 };
 
 const maskPrimitive = (value, options) => {
+  /* Logging applications often call new Date() on the keys of property names that look like dates
+    e.g. 'createDate'. If called on an asterisked string this can lead to a wrong but misleading
+    (and unmasked) date, so to be on the safe side return an empty string instead. */
+  if (value instanceof Date) return '';
+
   const stringValue = String(value);
   const indexToMaskTo = stringValue.length > 3
     ? Math.round(stringValue.length * (options.percentage / 100)) - 1
@@ -30,14 +35,15 @@ const maskPrimitive = (value, options) => {
 };
 
 const qsMask = (value, keysToMask, options) => {
-  if (typeof value !== 'string') return null;
-  const parsedUrl = urlParse(value);
-  const parsedQs = qs.parse(parsedUrl.query.slice(1));
-  const qsKeysToMask = Object.keys(parsedQs).filter(key => keysToMask.includes(key));
-  if (qsKeysToMask.length) {
-    qsKeysToMask.forEach((keyToMask) => { parsedQs[keyToMask] = maskPrimitive(parsedQs[keyToMask], options); });
-    parsedUrl.set('query', qs.stringify(parsedQs));
-    return parsedUrl.href;
+  if (typeof value === 'string'); {
+    const parsedUrl = urlParse(value);
+    const parsedQs = qs.parse(parsedUrl.query.slice(1));
+    const qsKeysToMask = Object.keys(parsedQs).filter(key => keysToMask.includes(key));
+    if (qsKeysToMask.length) {
+      qsKeysToMask.forEach((keyToMask) => { parsedQs[keyToMask] = maskPrimitive(parsedQs[keyToMask], options); });
+      parsedUrl.set('query', qs.stringify(parsedQs));
+      return parsedUrl.href;
+    }
   }
   return null;
 };
@@ -56,15 +62,15 @@ const findAndMask = (source, keysToMask, options = {}) => {
   if (topLevelQsMaskResult) return topLevelQsMaskResult;
   if (isMaskable(source)) return source; // source is just stringlike - we've checked if it's a querystring, but it's not, so we're just returning it.
 
-  function propertyHandler(value, key) {
-    if (keysToMask.indexOf(key) > -1) return maskDeep(value, keysToMask, finalOptions);
+  const propertyHandler = (value, key) => {
+    if (keysToMask.includes(key)) return maskDeep(value, keysToMask, finalOptions);
     if (isPlainObject(value) || Array.isArray(value)) return findAndMask(value, keysToMask, options);
 
     const qsMaskResult = qsMask(value, keysToMask, finalOptions);
     if (qsMaskResult) return qsMaskResult;
 
     return value;
-  }
+  };
   if (Array.isArray(source)) return source.map(propertyHandler);
   return mapValues(source, propertyHandler);
 };

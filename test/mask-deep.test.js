@@ -23,17 +23,17 @@ describe('mask deep', () => {
     assert.deepEqual(maskDeep(source, omit), expected);
   });
 
-  it('should mask a certain percentage (if configured) but totally mask anything >=3 characters', () => {
+  it('should mask a certain percentage (if configured) but totally mask anything <=3 characters', () => {
     const source = { a: 1, b: 222, c: { a: { a: 1, b: 2 }, d: 4 }, d: { a: 1, b: 'aaaaaaaaa', d: 4 } };
     const omit = ['b'];
     const expected = { a: 1, b: '***', c: { a: { a: 1, b: '*' }, d: 4 }, d: { a: 1, b: '*****aaaa', d: 4 } };
     assert.deepEqual(maskDeep(source, omit, { percentage: 60 }), expected);
   });
 
-  it('should mask dates and date strings', () => {
+  it('should turn Date objects into an empty string', () => {
     const source = { a: { b: '01-03-2000 00:00:00' }, b: new Date('01-03-2000 00:00:00'), c: 4 };
     const omit = ['b'];
-    const expected = { a: { b: '***************0:00' }, b: '*******************************00 (GMT)', c: 4 };
+    const expected = { a: { b: '***************0:00' }, b: '', c: 4 };
     assert.deepEqual(maskDeep(source, omit), expected);
   });
 
