@@ -30,11 +30,13 @@ describe('mask deep', () => {
     assert.deepEqual(maskDeep(source, omit, { percentage: 60 }), expected);
   });
 
-  it('should turn Date objects into an empty string', () => {
-    const source = { a: { b: '01-03-2000 00:00:00' }, b: new Date('01-03-2000 00:00:00'), c: 4 };
-    const omit = ['b'];
-    const expected = { a: { b: '***************0:00' }, b: '', c: 4 };
+  it('should turn primitive values with \'date\' in their key into empty strings, unless configured not to to do this', () => {
+    const source = { a: { b: '01-03-2000 00:00:00' }, myDate: new Date('01-03-2000 00:00:00'), c: 4 };
+    const omit = ['b', 'myDate'];
+    const expected = { a: { b: '***************0:00' }, myDate: '', c: 4 };
     assert.deepEqual(maskDeep(source, omit), expected);
+    const expectedMaskDatePropsNormally = { a: { b: '***************0:00' }, myDate: '*******************************00 (GMT)', c: 4 };
+    assert.deepEqual(maskDeep(source, omit, { maskDatePropsNormally: true }), expectedMaskDatePropsNormally);
   });
 
   it('should mask multiple keys from complex structures', () => {
