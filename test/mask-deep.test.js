@@ -1,5 +1,5 @@
 const assert = require('assert');
-const maskDeep = require('../mask-deep');
+const maskDeep = require('../src/mask-deep');
 
 describe('mask deep', () => {
   it('should mask all requested elements of an array', () => {
@@ -23,6 +23,13 @@ describe('mask deep', () => {
     assert.deepEqual(maskDeep(source, omit), expected);
   });
 
+  it('should mask from the right if configured to do so', () => {
+    const source = { a: 1, b: 2, c: { a: { a: 1, b: 2 }, d: 4 }, d: { a: 1, b: 'abcdefghi', d: 4 } };
+    const omit = ['b'];
+    const expected = { a: 1, b: '*', c: { a: { a: 1, b: '*' }, d: 4 }, d: { a: 1, b: 'ab*******', d: 4 } };
+    assert.deepEqual(maskDeep(source, omit, { maskFromRight: true }), expected);
+  });
+
   it('should mask a certain percentage (if configured) but totally mask anything <=3 characters', () => {
     const source = { a: 1, b: 222, c: { a: { a: 1, b: 2 }, d: 4 }, d: { a: 1, b: 'aaaaaaaaa', d: 4 } };
     const omit = ['b'];
@@ -31,12 +38,12 @@ describe('mask deep', () => {
   });
 
   it('should turn primitive values with \'time\' or \'date\' in their key into empty strings, unless configured not to', () => {
-    const source = { a: { b: '01-03-2000 00:00:00' }, myDate: new Date('01-03-2000 00:00:00'), c: 4, myTime: 'blahh' };
+    const source = { a: { b: '01-03-2000 00:00:00', myTime: 'blahh' }, myDate: new Date('01-03-2000 00:00:00'), c: 4 };
     const omit = ['b', 'myDate', 'myTime'];
-    const expected = { a: { b: '***************0:00' }, myDate: '', c: 4, myTime: '' };
+    const expected = { a: { b: '***************0:00', myTime: '' }, myDate: '', c: 4 };
     assert.deepEqual(maskDeep(source, omit), expected);
 
-    const expectedWithMaskTimePropsNormally = { a: { b: '***************0:00' }, myDate: '*******************************00 (GMT)', c: 4, myTime: '****h' };
+    const expectedWithMaskTimePropsNormally = { a: { b: '***************0:00', myTime: '****h' }, myDate: '*******************************00 (GMT)', c: 4 };
     assert.deepEqual(maskDeep(source, omit, { maskTimePropsNormally: true }), expectedWithMaskTimePropsNormally);
   });
 
@@ -48,9 +55,9 @@ describe('mask deep', () => {
   });
 
   it('should mask everything inside an object/array', () => {
-    const source = { a: 1, b: 2, c: [{ a: 'maskme', b: 'maskme' }, { a: { a: 'maskme', b: 'maskme' }, d: 'maskme' }], d: [{ c: { a: 'maskme' } }] };
-    const omit = ['c'];
-    const expected = { a: 1, b: 2, c: [{ a: '*****e', b: '*****e' }, { a: { a: '*****e', b: '*****e' }, d: '*****e' }], d: [{ c: { a: '*****e' } }] };
+    const source = { a: 1, b: 2, c: [{ a: 'maskme', b: 'maskme' }, { a: { a: 'maskme', b: 'maskme' }, d: 'maskme' }], d: [{ c: { a: 'maskme' } }], e: ['maskme', 'maskme', 'maskme'] };
+    const omit = ['c', 'e'];
+    const expected = { a: 1, b: 2, c: [{ a: '*****e', b: '*****e' }, { a: { a: '*****e', b: '*****e' }, d: '*****e' }], d: [{ c: { a: '*****e' } }], e: ['*****e', '*****e', '*****e'] };
     assert.deepEqual(maskDeep(source, omit), expected);
   });
 
