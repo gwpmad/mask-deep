@@ -6,18 +6,24 @@ const mapValues = require('lodash/mapValues');
 const defaultOptions = {
   percentage: 80,
   maskTimePropsNormally: false,
-  maskFrom: 'left',
+  maskFromRight: false,
 };
 
 const checkOptions = (options) => {
-  const { percentage, maskTimePropsNormally } = options;
+  const { percentage, maskTimePropsNormally, maskFromRight } = options;
   if (percentage && (Number.isNaN(Number(percentage)) || percentage < 0 || percentage > 100)) {
     throw new Error('Invalid percentage');
   }
   if (maskTimePropsNormally && (typeof maskTimePropsNormally !== 'boolean')) {
     throw new Error('maskTimePropsNormally must be a boolean');
   }
+  if (maskFromRight && (typeof maskFromRight !== 'boolean')) {
+    throw new Error('maskFromRight must be a boolean');
+  }
 };
+
+const shouldBeEmptyString = (key, maskTimePropsNormally) =>
+  ['date', 'time'].some(word => String(key).toLowerCase().includes(word)) && !maskTimePropsNormally;
 
 const isMaskable = (value) => {
   const type = typeof value;
@@ -25,21 +31,23 @@ const isMaskable = (value) => {
 };
 
 const maskPrimitive = (value, key, options) => {
-  const { percentage, maskTimePropsNormally } = options;
+  const { percentage, maskTimePropsNormally, maskFromRight } = options;
 
-  /* Logging applications often call new Date() on the keys of property names that look like times/dates
+  /* Logging applications sometimes call new Date() on properties whose keys make them look like times/dates
     e.g. 'timeStamp' or 'createDate'. If called on an asterisked string this can lead to a wrong but misleading
     (and unmasked) date, so to be on the safe side return an empty string unless configured to do otherwise. */
-  if (['date', 'time'].some(word => key.toLowerCase().includes(word)) && !maskTimePropsNormally) {
-    return '';
-  }
+  if (shouldBeEmptyString(key, maskTimePropsNormally)) return '';
 
-  const stringValue = String(value);
-  const indexToMaskTo = stringValue.length > 3
-    ? Math.round(stringValue.length * (percentage / 100)) - 1
-    : stringValue.length - 1;
-  return stringValue.split('').reduce((acc, char, i) =>
-    `${acc}${i <= indexToMaskTo ? '*' : stringValue[i]}`, '');
+  const arrayFromString = !maskFromRight ? String(value).split('') : String(value).split('').reverse();
+  const valueLength = arrayFromString.length;
+  if (valueLength <= 3) return '*'.repeat(valueLength);
+
+  const indexToMaskTo = Math.round(valueLength * (percentage / 100)) - 1;
+  const maskedString = arrayFromString.reduce((acc, char, i) =>
+    `${acc}${i <= indexToMaskTo ? '*' : arrayFromString[i]}`, '');
+
+  if (maskFromRight) return maskedString.split('').reverse().join('');
+  return maskedString;
 };
 
 const qsMask = (value, keysToMask, options) => {
