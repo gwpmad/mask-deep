@@ -1,5 +1,4 @@
 const urlParse = require('url-parse');
-const qs = require('querystring');
 const isPlainObject = require('lodash/isPlainObject');
 const mapValues = require('lodash/mapValues');
 
@@ -52,12 +51,13 @@ const maskPrimitive = (value, key, options) => {
 
 const qsMask = (value, keysToMask, options) => {
   if (typeof value === 'string'); {
-    const parsedUrl = urlParse(value);
-    const parsedQs = qs.parse(parsedUrl.query.slice(1));
-    const qsKeysToMask = Object.keys(parsedQs).filter(key => keysToMask.includes(key));
+    const parsedUrl = urlParse(value, true);
+    const qsKeysToMask = Object.keys(parsedUrl.query).filter(key => keysToMask.includes(key));
     if (qsKeysToMask.length) {
-      qsKeysToMask.forEach((keyToMask) => { parsedQs[keyToMask] = maskPrimitive(parsedQs[keyToMask], keyToMask, options); });
-      parsedUrl.set('query', qs.stringify(parsedQs));
+      qsKeysToMask.forEach((keyToMask) => {
+        parsedUrl.query[keyToMask] = maskPrimitive(parsedUrl.query[keyToMask], keyToMask, options);
+      });
+      parsedUrl.set('query', parsedUrl.query);
       return parsedUrl.href;
     }
   }
