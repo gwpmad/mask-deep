@@ -1,8 +1,8 @@
 {
   "name": "mask-deep",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Mask values within nested arrays and objects",
-  "main": "./dist/index.js",
+  "main": "./dist/mask-deep.js",
   "scripts": {
     "test": "mocha ./test",
     "lint": "./node_modules/.bin/eslint --ext .js ./src ./test",
