@@ -9,14 +9,16 @@ const defaultOptions = {
 };
 
 const checkOptions = (options) => {
+  const exists = value => typeof value !== 'undefined';
+
   const { percentage, maskTimePropsNormally, maskFromRight } = options;
-  if (percentage && (Number.isNaN(Number(percentage)) || percentage < 0 || percentage > 100)) {
+  if (exists(percentage) && (Number.isNaN(Number(percentage)) || percentage < 0 || percentage > 100)) {
     throw new Error('Invalid percentage');
   }
-  if (maskTimePropsNormally && (typeof maskTimePropsNormally !== 'boolean')) {
+  if (exists(maskTimePropsNormally) && (typeof maskTimePropsNormally !== 'boolean')) {
     throw new Error('maskTimePropsNormally must be a boolean');
   }
-  if (maskFromRight && (typeof maskFromRight !== 'boolean')) {
+  if (exists(maskFromRight) && (typeof maskFromRight !== 'boolean')) {
     throw new Error('maskFromRight must be a boolean');
   }
 };
