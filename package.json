@@ -2,12 +2,13 @@
   "name": "mask-deep",
   "version": "1.0.0",
   "description": "Mask values within nested arrays and objects",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "scripts": {
     "test": "mocha ./test",
     "lint": "./node_modules/.bin/eslint --ext .js ./src ./test",
+    "build": "babel src --out-dir dist",
     "precommit": "npm run lint && npm run test",
-    "prepare": ""
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",
