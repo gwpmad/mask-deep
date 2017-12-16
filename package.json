@@ -1,6 +1,6 @@
 {
   "name": "mask-deep",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Mask values within nested arrays and objects",
   "main": "./dist/mask-deep.js",
   "scripts": {

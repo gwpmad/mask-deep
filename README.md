@@ -4,7 +4,7 @@
 
 A simple function that, given an object or a url with a query string along with a list of properties to mask, will crawl through it and cover most of the length of these properties with asterisks.
 
-Useful in avoiding showing things like passwords or personally-identifiable information (PII) in your logging software.
+Useful in avoiding the display of passwords or personally-identifiable information (PII) in your logging software.
 
 Written with help from @glasseyes42
 
@@ -53,7 +53,8 @@ console.log(maskedUrl);
 */
 ```
 
-### `maskDeep(source, keysToMask, [options])`
+### API
+#### `maskDeep(source, keysToMask, [options])`
 Masks the values of the provided keys within an object (recursively) or within a url's query string. Non-string properties will be coerced into strings; however, see the 'Time props' note below if your object includes properties with 'time' or 'date' within their keys.
 - `source` [object|string] - the entity containing the properties to be masked
 - `keysToMask` [array] - the properties whose values should be masked. Should include only strings
@@ -62,7 +63,7 @@ Masks the values of the provided keys within an object (recursively) or within a
   - `maskFromRight` [boolean] - mask values starting from the right, e.g. `'mask-this'` becomes `'ma*******'`. Defaults to `false`
   - `maskTimePropsNormally` [boolean] - see 'Time props' note below. Defaults to `false`
 
-### Important notes
+### Important notes about behaviour
 #### Properties that are arrays or objects
 When the value of a key to mask is an array or an object, mask-deep will mask **all values** within it, recursively, even if they do not share the key. For example:
 ```
@@ -96,13 +97,13 @@ const maskedObject = maskDeep(maskMe, ['prop1', 'prop3']);
 ```
 
 #### Short props
-Strings with a `length` of 3 or under will be fully masked, regardless of the configured `percentage`.
+Strings or integers with a character length of 3 or below will be fully masked, regardless of the configured `percentage`.
 
 #### Time props
 
-mask-deep can handle values that are Date objects without any problem. However, logging applications (e.g. Kibana) sometimes call new Date() on properties whose keys make them look like times/dates e.g. 'timeStamp' or 'createDate'. If called on an asterisked string this can lead to a wrong but misleading (and unmasked) date.
+mask-deep can handle values that are Date objects without any problem. However, logging applications (e.g. Kibana) sometimes call `new Date()` on properties whose keys make them look like times/dates e.g. `'timeStamp'` or `'createDate'`. If called on an asterisked string this can lead to a wrong but misleading (and unmasked) date.
 
-Therefore, to be on the safe side, if asked to mask properties like this maskDeep will return an empty string unless the option `maskTimePropsNormally` is set to true. If it is, properties with 'time' or 'date' in their keys will be masked normally as strings, e.g. masking `new Date(2013, 13, 1)` will return `'*******************************00 (GMT)'`.
+Therefore, to be on the safe side, if asked to mask properties like this maskDeep will return an empty string unless the option `maskTimePropsNormally` is set to true. If it is, properties with 'time' or 'date' in their keys will be masked normally as strings, e.g. masking `{ createTime: new Date(2013, 13, 1) }` will return `{ createTime: '*******************************00 (GMT)' }`.
 
 Date objects with keys that do not have 'time' or 'date' in them will always be masked in this way regardless of the configured options.
 
