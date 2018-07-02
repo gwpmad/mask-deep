@@ -62,9 +62,9 @@ describe('mask deep', () => {
   });
 
   it('should mask instances of "?keyToMask=" or "&keyToMask=" in otherwise-non-masked strings and mask their values', () => {
-    const source = { a: 1, b: 2, e: 'blahblah?c=maskThis', d: [{ f: '/url-path?d=dontMask&c=maskThis', c: /* should be fully masked because key is c */'/url-path?d=dontMask&c=maskThis' }] };
+    const source = { a: 1, b: 2, e: 'blahblah?c=maskThis', d: [{ f: '/url-path?d=dontMask&c=maskThis', c: /* should be fully masked because key is c but c query prop should be masked additionally */'/url-path?d=dontMask&c=maskThis' }] };
     const omit = ['c'];
-    const expected = { a: 1, b: 2, e: 'blahblah?c=******is', d: [{ f: '/url-path?d=dontMask&c=******is', c: '*************************skThis' }] };
+    const expected = { a: 1, b: 2, e: 'blahblah?c=******is', d: [{ f: '/url-path?d=dontMask&c=******is', c: '*****************************is' }] };
     assert.deepEqual(maskDeep(source, omit), expected);
   });
 
@@ -72,6 +72,20 @@ describe('mask deep', () => {
     const source = 'https://www.google.co.uk/search?q=shouldbemasked&oq=abc&aqs=shouldbemasked';
     const omit = ['q', 'aqs'];
     const expected = 'https://www.google.co.uk/search?q=***********ked&oq=abc&aqs=***********ked';
+    assert.deepEqual(maskDeep(source, omit), expected);
+  });
+
+  it('should mask query string values correctly even if the whole string is also being masked', () => {
+    const source = { a: 'http://www.google.com?&b=foobarfoobar&c=quxfoobar&d=foobar&e=barfooquxbarfooqux&a=shouldbemasked', b: 1234 };
+    const omit = ['a'];
+    const expected = { a: '****************************************************************************ux&a=***********ked', b: 1234 };
+    assert.deepEqual(maskDeep(source, omit), expected);
+  });
+
+  it('should chop query off a url with a query that has an un-decodable escape sequence (avoid URI malformed bug), whether it has a keyToMask in it or not', () => {
+    const source = { a: 'http://www.google.com?george=%E0%A4%', b: 'http://www.google.com?george=%E0%A4%', c: 1234 };
+    const omit = ['a'];
+    const expected = { a: '*****************.com', b: 'http://www.google.com', c: 1234 };
     assert.deepEqual(maskDeep(source, omit), expected);
   });
 

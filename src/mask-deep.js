@@ -52,8 +52,14 @@ const maskPrimitive = (value, key, options) => {
 };
 
 const qsMask = (value, keysToMask, options) => {
-  if (typeof value === 'string'); {
-    const parsedUrl = urlParse(value, true);
+  if (typeof value === 'string') {
+    let parsedUrl;
+    try {
+      parsedUrl = urlParse(value, true);
+    } catch (e) {
+      // string is url with query and there is an un-decodable escape sequence in query, (e.g. '%E0%A4%A'). return with query chopped off
+      return value.substring(0, value.indexOf('?'));
+    }
     const qsKeysToMask = Object.keys(parsedUrl.query).filter(key => keysToMask.includes(key));
     if (qsKeysToMask.length) {
       qsKeysToMask.forEach((keyToMask) => {
@@ -78,14 +84,15 @@ const findAndMask = (source, keysToMask, options = {}) => {
 
   const topLevelQsMaskResult = qsMask(source, keysToMask, finalOptions);
   if (topLevelQsMaskResult) return topLevelQsMaskResult;
-  if (isMaskable(source)) return source; // source is just stringlike - we've checked if it's a querystring, but it's not, so we're just returning it.
+  if (isMaskable(source)) return source; // source is url with no offending query props or it's just stringlike - so we're just returning it.
 
   const propertyHandler = (value, key) => {
+    const qsMaskResult = qsMask(value, keysToMask, finalOptions);
+    if (qsMaskResult) {
+      value = qsMaskResult;
+    }
     if (keysToMask.includes(key)) return maskDeep(value, key, keysToMask, finalOptions);
     if (isPlainObject(value) || Array.isArray(value)) return findAndMask(value, keysToMask, options);
-
-    const qsMaskResult = qsMask(value, keysToMask, finalOptions);
-    if (qsMaskResult) return qsMaskResult;
 
     return value;
   };
