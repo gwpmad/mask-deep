@@ -28,6 +28,7 @@ const shouldBeEmptyString = (key, maskTimePropsNormally) =>
 
 const isMaskable = (value) => {
   const type = typeof value;
+  if (value === null) return true;
   return (value instanceof Date) || (type !== 'object' && type !== 'function');
 };
 
