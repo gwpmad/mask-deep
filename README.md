@@ -62,7 +62,7 @@ Masks the values of the provided keys within an object (recursively) or within a
   - `percentage` [integer] - how much of each property to mask. Should be an integer between 0 and 100 (inclusive). Defaults to `80`
   - `maskFromRight` [boolean] - mask values starting from the right, e.g. `'mask-this'` becomes `'ma*******'`. Defaults to `false`
   - `maskTimePropsNormally` [boolean] - see 'Time props' note below. Defaults to `false`
-  - `isMaskable` [function(value)] - a callback to check if a value should be masked. Should return `true|false`.
+  - `isMaskable` [function(value)] - a callback that decides whether types are maskable. Should return `true|false`. Default function says no to objects and functions, yes to other types.
 
 ### Important notes about behaviour
 #### Properties that are arrays or objects
