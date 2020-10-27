@@ -93,4 +93,8 @@ describe('mask deep', () => {
     assert.deepEqual(maskDeep('a string', ['a', 'b']), 'a string');
     assert.deepEqual(maskDeep(1, []), 1);
   });
+
+  it('should treat a null value as maskable', () => {
+    assert.deepEqual(maskDeep({ a: null }, ['a']), { a: '***l' });
+  });
 });
