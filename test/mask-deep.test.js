@@ -97,4 +97,14 @@ describe('mask deep', () => {
   it('should treat a null value as maskable', () => {
     assert.deepEqual(maskDeep({ a: null }, ['a']), { a: '***l' });
   });
+
+  it('should allow overriding isMaskable check', () => {
+    const onlyStrings = (value) => typeof value === 'string';
+
+    assert.deepEqual(maskDeep({ a: 'string' }, ['a'], { isMaskable: onlyStrings }), { a: '*****g' });
+    assert.deepEqual(maskDeep({ a: ['array'] }, ['a'], { isMaskable: onlyStrings }), { a: ['****y'] });
+    assert.deepEqual(maskDeep({ a: 12345 }, ['a'], { isMaskable: onlyStrings }), { a: 12345 });
+    assert.deepEqual(maskDeep({ a: null }, ['a'], { isMaskable: onlyStrings }), { a: null });
+    assert.deepEqual(maskDeep({ a: undefined }, ['a'], { isMaskable: onlyStrings }), { a: undefined });
+  });
 });

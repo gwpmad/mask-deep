@@ -6,6 +6,11 @@ const defaultOptions = {
   percentage: 80,
   maskTimePropsNormally: false,
   maskFromRight: false,
+  isMaskable(value) {
+    const type = typeof value;
+    if (value === null) return true;
+    return (value instanceof Date) || (type !== 'object' && type !== 'function');
+  }
 };
 
 const checkOptions = (options) => {
@@ -25,12 +30,6 @@ const checkOptions = (options) => {
 
 const shouldBeEmptyString = (key, maskTimePropsNormally) =>
   ['date', 'time'].some(word => String(key).toLowerCase().includes(word)) && !maskTimePropsNormally;
-
-const isMaskable = (value) => {
-  const type = typeof value;
-  if (value === null) return true;
-  return (value instanceof Date) || (type !== 'object' && type !== 'function');
-};
 
 const maskPrimitive = (value, key, options) => {
   const { percentage, maskTimePropsNormally, maskFromRight } = options;
@@ -74,9 +73,14 @@ const qsMask = (value, keysToMask, options) => {
 };
 
 const maskDeep = (source, key, keysToMask, options) => {
-  if (isMaskable(source)) return maskPrimitive(source, key, options);
+  if (options.isMaskable(source)) return maskPrimitive(source, key, options);
   if (Array.isArray(source)) return source.map((value, idx) => maskDeep(value, idx, keysToMask, options));
-  return mapValues(source, (value, _key) => maskDeep(value, _key, keysToMask, options));
+
+  if (isPlainObject(source)) {
+    return mapValues(source, (value, _key) => maskDeep(value, _key, keysToMask, options));
+  }
+
+  return source;
 };
 
 const findAndMask = (source, keysToMask, options = {}) => {
@@ -85,7 +89,7 @@ const findAndMask = (source, keysToMask, options = {}) => {
 
   const topLevelQsMaskResult = qsMask(source, keysToMask, finalOptions);
   if (topLevelQsMaskResult) return topLevelQsMaskResult;
-  if (isMaskable(source)) return source; // source is url with no offending query props or it's just stringlike - so we're just returning it.
+  if (finalOptions.isMaskable(source)) return source; // source is url with no offending query props or it's just stringlike - so we're just returning it.
 
   const propertyHandler = (value, key) => {
     const qsMaskResult = qsMask(value, keysToMask, finalOptions);
