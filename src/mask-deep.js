@@ -75,7 +75,12 @@ const qsMask = (value, keysToMask, options) => {
 const maskDeep = (source, key, keysToMask, options) => {
   if (options.isMaskable(source)) return maskPrimitive(source, key, options);
   if (Array.isArray(source)) return source.map((value, idx) => maskDeep(value, idx, keysToMask, options));
-  return mapValues(source, (value, _key) => maskDeep(value, _key, keysToMask, options));
+
+  if (isPlainObject(source)) {
+    return mapValues(source, (value, _key) => maskDeep(value, _key, keysToMask, options));
+  }
+
+  return source;
 };
 
 const findAndMask = (source, keysToMask, options = {}) => {
